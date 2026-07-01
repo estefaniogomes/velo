@@ -1,15 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { generateOrderCode } from '../support/helpers';
 
+import { OrderLookupPage, OrderStatus } from '../support/pages/OrderLookupPage';
+
+/// AAA - Arrange, Act, Assert
+
 test.describe('Consulta de Pedido', ()=> {
 
-  test.beforeEach(async ({page}) => {
-     //Arrange
-    await page.goto('http://localhost:5173/');
-    await expect(page.getByTestId('hero-section').getByRole('heading', { name: 'Velô Sprint' })).toBeVisible();
-  
-    await page.getByRole('link', { name: 'Consultar Pedido' }).click();
-    await expect(page.getByRole('heading')).toContainText('Consultar Pedido');
+  test.beforeEach(async ({ page }) => {
+    // Arrange
+    await page.goto('http://localhost:5173/')
+    await expect(page.getByTestId('hero-section').getByRole('heading')).toContainText('Velô Sprint')
+
+    await page.getByRole('link', { name: 'Consultar Pedido' }).click()
+    await expect(page.getByRole('heading')).toContainText('Consultar Pedido')
   })
   
   //AAA - Arrange, Act, Assert
@@ -31,19 +35,13 @@ test('Deve consultar um Pedido Aprovado', async ({ page }) => {
     paymentMethod: 'À Vista',
   }
 
-  //Act
-  await page.getByTestId('search-order-id').fill(order.number);
-  await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  // Act
+  const orderLookupPage = new OrderLookupPage(page)
+
+  await orderLookupPage.searchOrder(order.number)
 
   //Assert
-  // await expect(page.getByText(order)).toBeVisible({ timeout: 10_000 });
-  // await page.getByText(order).click();
-
-  // await expect(page.getByText('APROVADO')).toBeVisible();
-  // await page.getByText('APROVADO').click();  
-
-
-  await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
+   await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
     - img
     - paragraph: Pedido
     - paragraph: ${order.number}
@@ -73,17 +71,9 @@ test('Deve consultar um Pedido Aprovado', async ({ page }) => {
     - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
     `);
 
-    const statusBadge = page.getByRole('status').filter({ hasText: 'APROVADO' });
-    await expect(statusBadge).toBeVisible();
-    await expect(statusBadge).toHaveText('APROVADO');
-    await expect(statusBadge).toHaveClass(/bg-green-100/);
-    await expect(statusBadge).toHaveClass(/text-green-700/);
+    await orderLookupPage.expectStatusBadge(order.status as OrderStatus)
 
-    const statusIcon = statusBadge.locator('svg');
-    await expect(statusIcon).toHaveClass(/lucide-circle-check-big/);
-;
-
-});
+})
 
 test('Deve consultar um Pedido Reprovado', async ({ page }) => {
 
@@ -102,18 +92,12 @@ test('Deve consultar um Pedido Reprovado', async ({ page }) => {
     paymentMethod: 'À Vista',
   }
 
-  //Act
-  await page.getByTestId('search-order-id').fill(order.number);
-  await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  // Act
+ const orderLookupPage = new OrderLookupPage(page)
+
+ await orderLookupPage.searchOrder(order.number)
 
   //Assert
-  // await expect(page.getByText(order)).toBeVisible({ timeout: 10_000 });
-  // await page.getByText(order).click();
-
-  // await expect(page.getByText('APROVADO')).toBeVisible();
-  // await page.getByText('APROVADO').click();  
-
-
   await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
     - img
     - paragraph: Pedido
@@ -144,16 +128,8 @@ test('Deve consultar um Pedido Reprovado', async ({ page }) => {
     - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
     `);
 
-    const statusBadge = page.getByRole('status').filter({ hasText: 'REPROVADO' });
-    await expect(statusBadge).toBeVisible();
-    await expect(statusBadge).toHaveText('REPROVADO');
-    await expect(statusBadge).toHaveClass(/bg-red-100/);
-    await expect(statusBadge).toHaveClass(/text-red-700/);
-
-    const statusIcon = statusBadge.locator('svg');
-    await expect(statusIcon).toHaveClass(/lucide-circle-x/);
-
-});
+    await orderLookupPage.expectStatusBadge(order.status as OrderStatus)
+})
 
 test('Deve consultar um Pedido Em Analise', async ({ page }) => {
 
@@ -172,18 +148,13 @@ test('Deve consultar um Pedido Em Analise', async ({ page }) => {
     paymentMethod: 'À Vista',
   }
 
-  //Act
-  await page.getByTestId('search-order-id').fill(order.number);
-  await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+
+ // Act
+ const orderLookupPage = new OrderLookupPage(page)
+
+ await orderLookupPage.searchOrder(order.number)
 
   //Assert
-  // await expect(page.getByText(order)).toBeVisible({ timeout: 10_000 });
-  // await page.getByText(order).click();
-
-  // await expect(page.getByText('APROVADO')).toBeVisible();
-  // await page.getByText('APROVADO').click();  
-
-
   await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
     - img
     - paragraph: Pedido
@@ -214,41 +185,25 @@ test('Deve consultar um Pedido Em Analise', async ({ page }) => {
     - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
     `);
 
-    const statusBadge = page.getByRole('status').filter({ hasText: 'EM_ANALISE  ' });
-    await expect(statusBadge).toBeVisible();
-    await expect(statusBadge).toHaveText('EM_ANALISE');
-    await expect(statusBadge).toHaveClass(/bg-yellow-100/);
-    await expect(statusBadge).toHaveClass(/text-yellow-700/);
-
-    const statusIcon = statusBadge.locator('svg');
-    await expect(statusIcon).toHaveClass(/lucide-clock/);
-});
+    await orderLookupPage.expectStatusBadge(order.status as OrderStatus)
+})
 
 test('Deve exibir mensagem quando pedido não é encontrado', async ({ page }) => {
 
   //Test Data
-  const order = generateOrderCode();
+  const order = generateOrderCode()
 
- 
-  await page.getByTestId('search-order-id').fill(order);
-  await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+ // Act
+  const orderLookupPage = new OrderLookupPage(page)
 
-  const title = page.getByRole('heading', { name: 'Pedido não encontrado' });
-  await expect(title).toBeVisible();
+  await orderLookupPage.searchOrder(order)
 
-  // const mensage = page.locator('//p[text()="Verifique o número do pedido e tente novamente"]')
-  // const mensage = page.locator('p', {hasText: 'Verifique o número do pedido e tente novamente'})
-  // await expect(mensage).toBeVisible();
-
-  // await expect(page.locator('#root')).toContainText('Pedido não encontrado');
-  // await expect(page.locator('#root')).toContainText('Verifique o número do pedido e tente novamente');
 
   await expect(page.locator('#root')).toMatchAriaSnapshot(`
     - img
     - heading "Pedido não encontrado" [level=3]
     - paragraph: Verifique o número do pedido e tente novamente
-    `);
-})
+    `)
 
+  })
 })
-
