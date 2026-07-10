@@ -1,53 +1,27 @@
-import { Page, Locator, expect } from '@playwright/test'
+import { Page, expect } from '@playwright/test'
 
-export type OrderStatus = 'APROVADO' | 'REPROVADO' | 'EM_ANALISE'
+type OrderStatus = 'APROVADO' | 'REPROVADO' | 'EM_ANALISE'
 
-// Cores seguem o padrão do design system: bg-{color}-100 / text-{color}-700.
-// Por isso só precisamos guardar a cor-base e o ícone; as classes são derivadas.
-type StatusColor = 'green' | 'red' | 'yellow'
+export class OrderLockupPage {
+    private readonly statusClasses = {
+        APROVADO: ['bg-green-100', 'text-green-700', 'lucide-circle-check-big'],
+        REPROVADO: ['bg-red-100', 'text-red-700', 'lucide-circle-x'],
+        EM_ANALISE: ['bg-amber-100', 'text-amber-700', 'lucide-clock']
+    } as const
 
-const STATUS_CONFIG: Record<OrderStatus, { color: StatusColor; icon: string }> = {
-  APROVADO: { color: 'green', icon: 'lucide-circle-check-big' },
-  REPROVADO: { color: 'red', icon: 'lucide-circle-x' },
-  EM_ANALISE: { color: 'yellow', icon: 'lucide-clock' },
-}
+    constructor(private page: Page) { }
 
-export class OrderLookupPage {
-  constructor(private page: Page) {}
-
-  async searchOrder(code: string) {
-    await this.page.getByRole('textbox', { name: 'Número do Pedido' }).fill(code)
-    await this.page.getByRole('button', { name: 'Buscar Pedido' }).click()
-  }
-
-  /**
-   * Retorna o locator do badge de status, já filtrado pelo texto esperado.
-   * Exposto separadamente caso o teste precise interagir com o locator puro
-   * (ex: hover, screenshot) sem disparar as assertions.
-   */
-  getStatusBadge(status: OrderStatus): Locator {
-    return this.page.getByRole('status').filter({ hasText: status })
-  }
-
-  /**
-   * Valida o badge de status completo: cor de fundo, cor do texto e ícone.
-   * Lança erro descritivo se o status não estiver mapeado em STATUS_CONFIG,
-   * evitando falsos-positivos (assert vazio) por status desconhecido.
-   */
-  async expectStatusBadge(status: OrderStatus) {
-    const config = STATUS_CONFIG[status]
-
-    if (!config) {
-      throw new Error(
-        `[OrderLookupPage] Status "${status}" não possui estilo mapeado em STATUS_CONFIG.`
-      )
+    async searchOrder(code: string) {
+        await this.page.getByRole('textbox', { name: 'Número do Pedido' }).fill(code)
+        await this.page.getByRole('button', { name: 'Buscar Pedido' }).click()
     }
 
-    const statusBadge = this.getStatusBadge(status)
-    await expect(statusBadge).toHaveClass(new RegExp(`bg-${config.color}-100`))
-    await expect(statusBadge).toHaveClass(new RegExp(`text-${config.color}-700`))
+    async validateStatusBadge(status: OrderStatus) {
+        const [bgClass, textClass, iconClass] = this.statusClasses[status]
+        const statusBadge = this.page.getByRole('status').filter({ hasText: status })
 
-    const statusIcon = statusBadge.locator('svg')
-    await expect(statusIcon).toHaveClass(new RegExp(config.icon))
-  }
+        await expect(statusBadge).toHaveClass(new RegExp(bgClass))
+        await expect(statusBadge).toHaveClass(new RegExp(textClass))
+        await expect(statusBadge.locator('svg')).toHaveClass(new RegExp(iconClass))
+    }
 }
