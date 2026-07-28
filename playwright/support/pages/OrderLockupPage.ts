@@ -11,13 +11,16 @@ export type OrderDetails = {
   paymentMethod: string
 }
 
-export class OrderLookupPage {
+export class OrderLockupPage {
     private readonly statusClasses: Record<OrderStatus, [string, string, string]> = {
         APROVADO: ['bg-green-100', 'text-green-700', 'lucide-circle-check-big'],
         REPROVADO: ['bg-red-100', 'text-red-700', 'lucide-circle-x'],
         EM_ANALISE: ['bg-yellow-100', 'text-yellow-700', 'lucide-clock'],
     }
 
+    async validatePageLoaded() {
+        await expect(this.page.getByRole('heading')).toContainText('Consultar Pedido')
+    }
     constructor(private page: Page) { }
 
     async searchOrder(code: string) {
