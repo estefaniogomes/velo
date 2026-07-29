@@ -39,6 +39,9 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
 
+    // Chrome Headed — visualização em tempo real (QA Automator)
+    headless: false,
+
     //Tempo máximo para ações interativas, como click(), fill()
     //Quando o valor é 0, herda o limite do timeout geral do teste
     actionTimeout: 5_000,
