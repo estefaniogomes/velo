@@ -7,8 +7,9 @@ export type OrderDetails = {
   status: OrderStatus
   color: string
   wheelType: string
-  customer: { name: string, email: string }
+  customer: { name: string, email: string, phone: string, document: string }
   paymentMethod: string
+  totalPrice: number
 }
 
 export function createOrderLockupActions(page: Page) {

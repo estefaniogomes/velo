@@ -1,5 +1,3 @@
-import { Page } from '@playwright/test'
-
 export function generateOrderCode() {
   const prefix = 'VLO-'
 
@@ -20,9 +18,4 @@ export function generateOrderCode() {
   }
 
   return `${prefix}${randomLetters}${randomNumbers}`
-}
-
-export async function searchOrder(page: Page, orderNumber: string) {
-  await page.getByRole('textbox', { name: 'Código do Pedido' }).fill(orderNumber)
-  await page.getByRole('button', { name: 'Buscar Pedido' }).click()
 }
